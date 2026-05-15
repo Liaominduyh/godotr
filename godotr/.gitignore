@@ -1,0 +1,14 @@
+# Godot 编辑器
+.godot/
+*.translation
+.mono/
+
+# 项目设计文档（仅本地，不上传）
+docs/
+
+# 运行时数据（应用首次启动自动生成）
+knowledge_base/
+settings.json
+
+# 临时文件
+*.tmp

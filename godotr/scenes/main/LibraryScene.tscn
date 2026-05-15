@@ -1,0 +1,119 @@
+[gd_scene format=3 uid="uid://dkefddkgra77i"]
+
+[ext_resource type="Script" uid="uid://ipyua1fpf6jg" path="res://scripts/ui/LibraryScene.gd" id="1"]
+[ext_resource type="FontFile" uid="uid://dukqoadhccf0k" path="res://runtime/fonts/SourceHanSerifCN-Heavy.otf" id="2_wppwc"]
+
+[node name="LibraryScene" type="Control" unique_id=1579377899]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1161.0
+offset_bottom = 581.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=1918957083]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.526
+anchor_bottom = 0.57900006
+offset_right = -6.9660645
+offset_bottom = -0.59906006
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_group_ = true
+
+[node name="TopBar" type="MarginContainer" parent="VBox" unique_id=1366827280]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="TopInner" type="HBoxContainer" parent="VBox/TopBar" unique_id=756309091]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleLabel" type="Label" parent="VBox/TopBar/TopInner" unique_id=46393191]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_wppwc")
+theme_override_font_sizes/font_size = 30
+text = "个人知识库"
+
+[node name="Spacer" type="Control" parent="VBox/TopBar/TopInner" unique_id=705837024]
+layout_mode = 2
+
+[node name="SearchInput" type="LineEdit" parent="VBox/TopBar/TopInner" unique_id=422504516]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "搜索笔记..."
+
+[node name="SettingsBtn" type="MenuButton" parent="VBox/TopBar/TopInner" unique_id=1286426543]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+text = "设置"
+flat = false
+
+[node name="ImportBtn" type="Button" parent="VBox/TopBar/TopInner" unique_id=1714739458]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+text = "导入"
+
+[node name="MCPBtn" type="Button" parent="VBox/TopBar/TopInner"]
+layout_mode = 2
+text = "MCP"
+toggle_mode = true
+
+[node name="AddBtn" type="Button" parent="VBox/TopBar/TopInner" unique_id=862318654]
+custom_minimum_size = Vector2(100, 60)
+layout_mode = 2
+text = "+ 新建笔记"
+
+[node name="Separator" type="HSeparator" parent="VBox" unique_id=973387275]
+layout_mode = 2
+
+[node name="TagBar" type="MarginContainer" parent="VBox" unique_id=651815813]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+
+[node name="TagScroll" type="ScrollContainer" parent="VBox/TagBar" unique_id=1583683279]
+layout_mode = 2
+size_flags_horizontal = 3
+vertical_scroll_mode = 2
+
+[node name="TagChips" type="HBoxContainer" parent="VBox/TagBar/TagScroll" unique_id=357148007]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Separator2" type="HSeparator" parent="VBox" unique_id=1100295002]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="VBox" unique_id=1615452586]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Margin" type="MarginContainer" parent="VBox/Scroll" unique_id=548696777]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="CardGrid" type="HFlowContainer" parent="VBox/Scroll/Margin" unique_id=481147716]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="EmptyLabel" type="Label" parent="." unique_id=769302922]
+layout_mode = 1
+offset_left = 473.0
+offset_top = 397.0
+offset_right = 773.0
+offset_bottom = 427.0
+text = "暂无笔记，点击右上角「+ 新建笔记」开始"

@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://dvl56o7nyeisi"]
+
+[ext_resource type="Script" uid="uid://76kn5x5jl063" path="res://scripts/ui/NoteCard.gd" id="1"]
+[ext_resource type="AudioStream" path="res://assets/Sounds/hover.wav" id="2_hover"]
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0.07, 0.07, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.18, 0.2, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="NoteCard" type="Panel" unique_id=2091533169]
+custom_minimum_size = Vector2(300, 220)
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("1")
+script = ExtResource("1")
+
+[node name="AccentBar" type="ColorRect" parent="." unique_id=1635872849]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 4.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1654014915]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=905598386]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="DateLabel" type="Label" parent="Margin/VBox" unique_id=2080583966]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="Margin/VBox" unique_id=501995863]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="TagContainer" type="HFlowContainer" parent="Margin/VBox" unique_id=852162467]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+
+[node name="HoverSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_hover")
+volume_db = -12.0
