@@ -1,12 +1,20 @@
-# 知识库 — 本地知识管理系统
+# godotr
 
-基于 Godot 4.6 构建的桌面端个人知识库。面向游戏开发者，以 Markdown + YAML frontmatter 为数据格式，支持全文搜索、标签管理、外部导入和 AI 总结。
+基于 Godot 4.6 构建的本地知识库管理系统。面向游戏开发者，以 Markdown + YAML frontmatter 为数据格式，支持全文搜索、标签管理、外部导入和 AI 总结——人可编辑，AI 可调用。
+
+- 笔记自动保存，2 秒无操作即存，随手记录不丢失
+- MCP 协议桥接，Claude Code 可直接检索和读写知识库
+- 数据全本地存储，无需网络，无需注册
+- 开发时长一坤年
 
 ## 快速开始
 
-1. 用 Godot 4.6 打开项目目录
-2. 按 `F5` 运行（主场景 `scenes/main/LibraryScene.tscn`）
-3. 点击「+ 新建笔记」开始使用
+**桌面应用**
+- 下载 `knowledge_base.exe`，放到任意项目文件夹根目录，双击运行
+
+**便携软件包**
+- 下载便携软件包，解压到项目根目录，进入 `godotr/` 双击 `run_kb.bat` 运行
+
 
 ### 运行测试
 
@@ -14,58 +22,34 @@
 godot --headless --path . tests/test_runner.tscn
 ```
 
-或在编辑器中右键 `tests/test_runner.tscn` → 设为主场景 → F5。
 
-## 功能
+## 特色
 
-| 模块 | 说明 |
-|------|------|
-| 笔记编辑 | 创建、查看、编辑、删除。Markdown 渲染（标题、粗斜体、代码块、链接、图片、列表） |
-| 标签系统 | 多标签、标签云、标签 + 关键词组合筛选 |
-| 全文搜索 | 标题/标签/摘要搜索，相关性排序，结果关键词高亮 |
-| 导入 | URL 抓取、本地文件（.md/.txt/.json）、粘贴 Markdown |
-| AI 总结 | 手动模式 + API 调用（OpenAI 兼容接口，自动提取标题/标签/摘要） |
-| 代码高亮 | GDScript / C# 关键字着色，注释、字符串、数字区分颜色 |
-| 编辑器 | 行号显示、字数行数统计、2 秒无操作自动保存 |
-| 快捷键 | Esc 返回、Ctrl+S 保存、Ctrl+D 删除 |
-| 未保存提示 | 编辑后离开或删除时弹出确认对话框 |
-| 设置 | API 地址 / Key / 模型配置，持久化到 user://settings.json |
+- **Markdown + YAML**：笔记以 `.md` 文件存储，YAML frontmatter 记录标题、标签、来源、创建/更新时间等元数据
+- **全文搜索**：基于内存索引的实时搜索，覆盖标题、标签、摘要，结果按相关性排序，<500ms 响应
+- **标签系统**：多标签筛选、标签云、右键菜单（改颜色、调字号），按标签 + 关键词组合过滤
+- **Markdown 渲染**：标题、粗斜体、代码块（GDScript / C# 语法高亮）、链接、图片、列表
+- **AI 总结**：粘贴文档或 URL，一键生成结构化笔记（标题 + 摘要 + 标签 + 正文），大文档自动分片
+- **外部导入**：URL 抓取、本地文件（`.md` / `.txt` / `.json`）导入
+- **自动保存**：编辑后 2 秒无操作自动保存，离开或删除时未保存提示
+- **快捷键**：`Esc` 返回、`Ctrl+S` 保存、`Ctrl+D` 删除
+- **悬停音效**：卡片 hover 时播放短促提示音，视觉缩放 + 强调色动效
 
-## 项目结构
+## 快速释放
 
-```
-godotr/
-├── project.godot                  # 引擎配置，autoload: EventBus, KnowledgeBase
-├── README.md
-├── docs/
-│   ├── godot-knowledge-base-prd.md  # 产品需求文档
-│   └── adr.md                       # 架构决策记录
-├── scenes/
-│   ├── main/
-│   │   ├── LibraryScene.tscn       # 主界面 — Steam 风格卡片网格
-│   │   └── NoteScene.tscn          # 查看/编辑场景
-│   └── components/
-│       └── NoteCard.tscn           # 笔记卡片组件
-├── scripts/
-│   ├── autoload/
-│   │   ├── EventBus.gd             # 全局信号总线（10 行）
-│   │   └── KnowledgeBase.gd        # 核心管理器 — CRUD/搜索/导入/索引（301 行）
-│   ├── models/
-│   │   ├── NoteResource.gd         # 笔记数据模型 — YAML frontmatter 解析（117 行）
-│   │   └── NoteIndex.gd            # 内存索引 — 搜索/标签统计（192 行）
-│   └── ui/
-│       ├── LibraryScene.gd         # 主界面逻辑 — 卡片渲染/标签筛选/导入/AI（587 行）
-│       ├── NoteScene.gd            # 编辑场景逻辑 — Markdown 渲染/自动保存（343 行）
-│       └── NoteCard.gd             # 卡片组件 — 悬停效果/来源标识（128 行）
-└── tests/
-    ├── test_runner.gd / .tscn      # 轻量测试运行器（无外部依赖）
-    ├── test_assert.gd              # 断言工具
-    ├── test_note_resource.gd       # 数据模型测试 — 15 项
-    ├── test_note_index.gd          # 索引/搜索测试 — 25 项
-    └── test_knowledge_base.gd      # 核心逻辑测试 — 19 项
-```
+- [godotr 桌面应用]() — 单 exe，即下即用
+- [便携软件包]() — 含 Python 运行时，支持 MCP AI 接入
 
-**总计：** 12 个 GDScript 文件（2402 行）+ 4 个 .tscn 场景 + 59 个单元测试
+## 操作指南
+
+1. 启动后进入主界面，卡片网格展示所有笔记
+2. 点击右上角「+ 新建笔记」创建第一篇笔记，输入标题和 Markdown 正文
+3. 标签栏输入标签（逗号分隔），左侧标签云点击筛选
+4. 顶部搜索框输入关键词，实时过滤笔记卡片
+5. 点击卡片进入查看/编辑，工具栏可切换查看/编辑模式
+6. 「导入」按钮支持 URL 抓取和本地文件导入
+7. 点击「MCP」按钮开启 AI 接入服务，Claude Code 可通过 MCP 直接检索知识库
+8. 「设置」中可更换界面字体
 
 ## 架构
 
@@ -84,22 +68,17 @@ godotr/
 └─────────────────────────────────────┘
 ```
 
-- **数据格式**：Markdown + YAML frontmatter，存储路径见下方「数据存储」
-- **索引**：`index.json`，启动时加载，修改后增量更新
-- **场景导航**：`get_tree().change_scene_to_file()` + `KnowledgeBase.pending_note_path` 传递状态
-- **信号总线**：`EventBus` 解耦跨场景通信（note_created/updated/deleted、knowledge_base_ready）
-
 ## 数据存储
 
-项目支持三种运行模式，路径决策由 `knowledge_a.gd` 中的 `--godotr-dir` 命令行参数控制：
+| 运行模式 | 笔记/索引路径 | 设置文件 |
+|---------|-------------|---------|
+| 便携软件包 (run_kb.bat) | `godotr/knowledge_base/` | `godotr/settings.json` |
+| 桌面应用 (exe) | `<exe_dir>/godotr/knowledge_base/` | `<exe_dir>/godotr/settings.json` |
 
-| 模式 | 笔记/索引路径 | 设置文件 | 说明 |
-|------|-------------|---------|------|
-| 编辑器 (F5) | `user://knowledge_base/` | `user://settings.json` | Godot 编辑器直接运行 |
-| 项目包 (run_kb.bat) | `godotr/knowledge_base/` | `godotr/settings.json` | 项目根目录下 `.claude/mcp.json` 自动创建 |
-| 单 exe | `<exe_dir>/godotr/knowledge_base/` | `<exe_dir>/godotr/settings.json` | 便携部署，数据跟随 exe |
 
-编辑器模式下 `user://` 在 Windows 的实际路径：`%APPDATA%/Godot/app_userdata/知识库/`
+## 支持平台
+
+当前仅支持 Windows。未来计划支持 Linux。
 
 ## 许可
 
