@@ -228,31 +228,64 @@ func _ensure_directories() -> void:
 
 
 func _first_run_setup() -> void:
-	# .claude/mcp.json → project_root/.claude/（仅在文件存在时生成）
+	# .claude/mcp.json → project_root/.claude/
 	var claude_dir := project_root.path_join(".claude")
 	if not DirAccess.dir_exists_absolute(claude_dir):
 		DirAccess.make_dir_absolute(claude_dir)
 	var mcp_path := claude_dir.path_join("mcp.json")
 	if not FileAccess.file_exists(mcp_path):
-		var rel := _godotr_dir.get_file()  # "godotr"
-		var py_path := project_root.path_join(rel.path_join("runtime/python/python.exe"))
-		var bridge_path := project_root.path_join(rel.path_join("mcp_bridge.py"))
-		if FileAccess.file_exists(py_path) and FileAccess.file_exists(bridge_path):
-			var mcp_config := JSON.stringify({
-				"mcpServers": {
-					"knowledge-base": {
-						"command": rel.path_join("runtime/python/python.exe"),
-						"args": [rel.path_join("mcp_bridge.py")]
-					}
-				}
-			}, "\t")
-			var f := FileAccess.open(mcp_path, FileAccess.WRITE)
-			if f:
-				f.store_string(mcp_config)
+		_setup_mcp_config(mcp_path)
 	# runtime/fonts/ → _godotr_dir/runtime/fonts/
 	var fonts_dir := _godotr_dir.path_join("runtime/fonts")
 	if not DirAccess.dir_exists_absolute(fonts_dir):
 		DirAccess.make_dir_recursive_absolute(fonts_dir)
+
+
+func _setup_mcp_config(mcp_path: String) -> void:
+	var rel := _godotr_dir.get_file()
+	var py_path := project_root.path_join(rel.path_join("runtime/python/python.exe"))
+	var bridge_path := project_root.path_join(rel.path_join("mcp_bridge.py"))
+
+	if FileAccess.file_exists(py_path) and FileAccess.file_exists(bridge_path):
+		# 便携包模式：使用捆绑的 Python
+		_write_mcp_json(mcp_path, rel.path_join("runtime/python/python.exe"), [rel.path_join("mcp_bridge.py")])
+	else:
+		# 单 exe 模式：尝试使用系统 Python
+		_setup_system_python_mcp(mcp_path, rel, bridge_path)
+
+
+func _setup_system_python_mcp(mcp_path: String, rel: String, bridge_path: String) -> void:
+	# 检测系统是否安装了 Python
+	var output: Array = []
+	var exit_code := OS.execute("python", PackedStringArray(["--version"]), output, true)
+	if exit_code != 0:
+		return
+
+	# 将 mcp_bridge.py 从 PCK 提取到 godotr/
+	if not FileAccess.file_exists(bridge_path):
+		var source := FileAccess.open("res://mcp_bridge.py", FileAccess.READ)
+		if not source:
+			return
+		var content := source.get_as_text()
+		var dest := FileAccess.open(bridge_path, FileAccess.WRITE)
+		if dest:
+			dest.store_string(content)
+
+	_write_mcp_json(mcp_path, "python", [rel.path_join("mcp_bridge.py")])
+
+
+func _write_mcp_json(path: String, command: String, args: Array) -> void:
+	var mcp_config := JSON.stringify({
+		"mcpServers": {
+			"knowledge-base": {
+				"command": command,
+				"args": args
+			}
+		}
+	}, "\t")
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f:
+		f.store_string(mcp_config)
 
 
 func _load_index() -> void:
