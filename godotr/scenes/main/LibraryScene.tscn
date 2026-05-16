@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dkefddkgra77i"]
 
 [ext_resource type="Script" uid="uid://ipyua1fpf6jg" path="res://scripts/ui/LibraryScene.gd" id="1"]
-[ext_resource type="FontFile" uid="uid://dukqoadhccf0k" path="res://runtime/fonts/SourceHanSerifCN-Heavy.otf" id="2_wppwc"]
+[ext_resource type="FontFile" uid="uid://xeb7cpxf4ujx" path="res://runtime/fonts/SourceHanSerifCN-Medium.otf" id="2_wppwc"]
 
 [node name="LibraryScene" type="Control" unique_id=1579377899]
 layout_mode = 3
@@ -59,10 +59,10 @@ custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 text = "导入"
 
-[node name="MCPBtn" type="Button" parent="VBox/TopBar/TopInner"]
+[node name="MCPBtn" type="Button" parent="VBox/TopBar/TopInner" unique_id=477839945]
 layout_mode = 2
-text = "MCP"
 toggle_mode = true
+text = "MCP"
 
 [node name="AddBtn" type="Button" parent="VBox/TopBar/TopInner" unique_id=862318654]
 custom_minimum_size = Vector2(100, 60)

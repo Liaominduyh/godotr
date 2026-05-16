@@ -37,7 +37,7 @@ def handle_request(request: dict):
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "knowledge-base", "version": "1.0"}
+                "serverInfo": {"name": "knowledge-base", "version": "0.2.6"}
             }
         }
 

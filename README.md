@@ -1,6 +1,6 @@
 # godotr
 
-基于 Godot 4.6 构建的本地知识库管理系统。面向游戏开发者，以 Markdown + YAML frontmatter 为数据格式，支持全文搜索、标签管理、外部导入和 AI 总结——人可编辑，AI 可调用。
+基于 Godot 4.6 构建的本地知识库管理系统。面向游戏开发者，以 Markdown + YAML frontmatter 为数据格式，支持全文搜索、标签管理、外部导入，AI集成开发知识库。
 
 - 笔记自动保存，2 秒无操作即存，随手记录不丢失
 - MCP 协议桥接，Claude Code 可直接检索和读写知识库
@@ -10,11 +10,10 @@
 ## 快速开始
 
 **桌面应用**
-- 下载 `knowledge_base.exe`，放到任意项目文件夹根目录，双击运行
+- 下载 `knowledge_base.exe`，放到任意项目文件夹根目录，双击运行（自动检测Python环境）
 
 **便携软件包**
-- 下载便携软件包，解压到项目根目录，进入 `godotr/` 双击 `run_kb.bat` 运行
-
+- 下载便携软件包，解压到项目根目录，进入 `godotr/` 双击 `run_kb.bat` 运行（自带Python环境）
 
 ### 运行测试
 

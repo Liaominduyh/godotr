@@ -661,7 +661,7 @@ func _about_dialog() -> void:
 	vbox.add_child(name_lbl)
 
 	var ver_lbl := Label.new()
-	ver_lbl.text = "版本 1.0  ·  Godot 4.6"
+	ver_lbl.text = "版本 0.2.6  ·  Godot 4.6"
 	ver_lbl.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	vbox.add_child(ver_lbl)
 
