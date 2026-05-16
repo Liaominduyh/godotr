@@ -6,6 +6,145 @@ const INDEX_FILE: String = "index.json"
 const NOTES_DIR: String = "notes"
 const KB_DIR_NAME: String = "knowledge_base"
 
+## mcp_bridge.py 内嵌源码 — 单 exe 部署时直接写出，不依赖 PCK 资源提取
+const MCP_BRIDGE_PY := '#!/usr/bin/env python3
+"""MCP 桥接 — 将知识库 TCP API 包装为 MCP 协议，供 Claude Code 调用。"""
+import json, socket, sys
+
+TCP_HOST = "127.0.0.1"
+TCP_PORT = 8090
+
+
+def call_kb(method: str, params: dict = None) -> dict:
+    """发送 JSON 到知识库 TCP 服务，返回结果。"""
+    req = {"method": method, "params": params or {}}
+    try:
+        s = socket.create_connection((TCP_HOST, TCP_PORT), timeout=5)
+        s.sendall((json.dumps(req) + "\\n").encode())
+        data = b""
+        while True:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+            if b"\\n" in data:
+                break
+        s.close()
+        return json.loads(data.decode().strip())
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def handle_request(request: dict):
+    """处理 MCP JSON-RPC 请求。"""
+    req_id = request.get("id")
+    method = request.get("method")
+
+    if method == "initialize":
+        return {
+            "jsonrpc": "2.0", "id": req_id,
+            "result": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "knowledge-base", "version": "0.2.6"}
+            }
+        }
+
+    if method == "notifications/initialized":
+        return None  # 无需回复
+
+    if method == "tools/list":
+        return {
+            "jsonrpc": "2.0", "id": req_id,
+            "result": {"tools": [
+                {
+                    "name": "search_knowledge",
+                    "description": "搜索知识库笔记，返回匹配的标题、路径和标签",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"query": {"type": "string", "description": "搜索关键词"}},
+                        "required": ["query"]
+                    }
+                },
+                {
+                    "name": "get_note",
+                    "description": "读取一篇笔记的完整内容",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"file_path": {"type": "string", "description": "笔记路径，如 notes/20260115-godot.md"}},
+                        "required": ["file_path"]
+                    }
+                },
+                {
+                    "name": "list_notes",
+                    "description": "列出所有笔记的摘要信息",
+                    "inputSchema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "get_tags",
+                    "description": "获取所有标签及其计数",
+                    "inputSchema": {"type": "object", "properties": {}}
+                },
+                {
+                    "name": "create_summary",
+                    "description": "创建一篇 AI 总结笔记",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string", "description": "笔记标题"},
+                            "content": {"type": "string", "description": "原始内容"},
+                            "tags": {"type": "array", "items": {"type": "string"}, "description": "标签列表"},
+                            "summary": {"type": "string", "description": "AI 生成的总结"}
+                        },
+                        "required": ["title", "summary"]
+                    }
+                },
+            ]}
+        }
+
+    if method == "tools/call":
+        tool_name = request["params"]["name"]
+        args = request["params"].get("arguments", {})
+
+        kb_methods = {
+            "search_knowledge": "search",
+            "get_note": "get_note",
+            "list_notes": "list_notes",
+            "get_tags": "get_tags",
+            "create_summary": "create_summary",
+        }
+        kb_method = kb_methods.get(tool_name)
+
+        if not kb_method:
+            return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Unknown tool: {tool_name}"}}
+
+        result = call_kb(kb_method, args)
+        if "error" in result:
+            return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32000, "message": result["error"]}}
+
+        return {"jsonrpc": "2.0", "id": req_id, "result": {"content": [{"type": "text", "text": json.dumps(result, ensure_ascii=False, indent=2)}]}}
+
+
+def main():
+    """MCP stdio 主循环 — 从 stdin 读请求，写回复到 stdout。"""
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            req = json.loads(line)
+            resp = handle_request(req)
+            if resp:
+                sys.stdout.write(json.dumps(resp, ensure_ascii=False) + "\\n")
+                sys.stdout.flush()
+        except json.JSONDecodeError:
+            pass
+
+
+if __name__ == "__main__":
+    main()
+'
+
 var index: NoteIndex = NoteIndex.new()
 var kb_dir: String = ""  # 实际知识库路径
 
@@ -228,11 +367,10 @@ func _ensure_directories() -> void:
 
 
 func _first_run_setup() -> void:
-	# .claude/mcp.json → project_root/.claude/
-	var claude_dir := project_root.path_join(".claude")
-	if not DirAccess.dir_exists_absolute(claude_dir):
-		DirAccess.make_dir_absolute(claude_dir)
-	var mcp_path := claude_dir.path_join("mcp.json")
+	# 首次运行：从 PCK 解出 Python 运行时到 godotr/runtime/python/
+	_extract_python_runtime()
+	# .mcp.json → project_root/.mcp.json（Claude Code MCP 配置在项目根目录）
+	var mcp_path := project_root.path_join(".mcp.json")
 	if not FileAccess.file_exists(mcp_path):
 		_setup_mcp_config(mcp_path)
 	# runtime/fonts/ → _godotr_dir/runtime/fonts/
@@ -241,43 +379,102 @@ func _first_run_setup() -> void:
 		DirAccess.make_dir_recursive_absolute(fonts_dir)
 
 
+func _extract_python_runtime() -> void:
+	## 从 PCK 中解出 Python 运行时到 godotr/runtime/python/（单 exe 首次运行）
+	var py_exe := _godotr_dir.path_join("runtime/python/python.exe")
+	if FileAccess.file_exists(py_exe):
+		return  # 已解出或便携包自带，无需操作
+
+	var src_dir := DirAccess.open("res://runtime/python/")
+	if not src_dir:
+		return  # PCK 中无 Python 运行时（非 embed_pck 或导出时没包含）
+
+	var dst_dir := _godotr_dir.path_join("runtime/python")
+	DirAccess.make_dir_recursive_absolute(dst_dir)
+
+	src_dir.list_dir_begin()
+	var file_name := src_dir.get_next()
+	while not file_name.is_empty():
+		if not src_dir.current_is_dir():
+			_copy_from_pck("res://runtime/python/".path_join(file_name), dst_dir.path_join(file_name))
+		file_name = src_dir.get_next()
+	src_dir.list_dir_end()
+
+
+func _copy_from_pck(src: String, dst: String) -> void:
+	var f := FileAccess.open(src, FileAccess.READ)
+	if not f:
+		return
+	var data := f.get_buffer(f.get_length())
+	f = FileAccess.open(dst, FileAccess.WRITE)
+	if f:
+		f.store_buffer(data)
+
+
+func _write_bridge_file(bridge_path: String) -> void:
+	## 写出 mcp_bridge.py，优先用内嵌源码，PCK 资源为回退
+	if FileAccess.file_exists(bridge_path):
+		return
+	var content := MCP_BRIDGE_PY
+	if content.is_empty():
+		var source := FileAccess.open("res://mcp_bridge.py", FileAccess.READ)
+		if not source:
+			return
+		content = source.get_as_text()
+	else:
+		var lines: PackedStringArray = content.split("\n")
+		for i in lines.size():
+			lines[i] = lines[i].trim_prefix("\t")
+		content = "\n".join(lines)
+	var dest := FileAccess.open(bridge_path, FileAccess.WRITE)
+	if dest:
+		dest.store_string(content)
+
+
 func _setup_mcp_config(mcp_path: String) -> void:
 	var rel := _godotr_dir.get_file()
 	var py_path := project_root.path_join(rel.path_join("runtime/python/python.exe"))
 	var bridge_path := project_root.path_join(rel.path_join("mcp_bridge.py"))
 
-	if FileAccess.file_exists(py_path) and FileAccess.file_exists(bridge_path):
-		# 便携包模式：使用捆绑的 Python
+	# 写出 mcp_bridge.py（内嵌源码，无需依赖 PCK）
+	_write_bridge_file(bridge_path)
+
+	if FileAccess.file_exists(py_path):
+		# 自带 Python（便携包或首次运行已解出）
 		_write_mcp_json(mcp_path, rel.path_join("runtime/python/python.exe"), [rel.path_join("mcp_bridge.py")])
 	else:
-		# 单 exe 模式：尝试使用系统 Python
+		# 回退：尝试使用系统 Python
 		_setup_system_python_mcp(mcp_path, rel, bridge_path)
 
 
 func _setup_system_python_mcp(mcp_path: String, rel: String, bridge_path: String) -> void:
-	# 检测系统是否安装了 Python
+	# get system Python full path, write bridge, generate .mcp.json
 	var output: Array = []
-	var exit_code := OS.execute("python", PackedStringArray(["--version"]), output, true)
-	if exit_code != 0:
+	var python_path := ""
+	for cmd in ["python", "python3"]:
+		output.clear()
+		var ec := OS.execute(cmd, PackedStringArray(["-c", "import sys; print(sys.executable)"]), output, true)
+		if ec == 0 and not output.is_empty():
+			python_path = output[0].strip_edges()
+			if not python_path.is_empty():
+				break
+	if python_path.is_empty():
+		push_warning("MCP config failed: no system Python (python/python3)")
 		return
 
-	# 将 mcp_bridge.py 从 PCK 提取到 godotr/
+	_write_bridge_file(bridge_path)
 	if not FileAccess.file_exists(bridge_path):
-		var source := FileAccess.open("res://mcp_bridge.py", FileAccess.READ)
-		if not source:
-			return
-		var content := source.get_as_text()
-		var dest := FileAccess.open(bridge_path, FileAccess.WRITE)
-		if dest:
-			dest.store_string(content)
+		push_warning("MCP config failed: cannot write mcp_bridge.py")
+		return
 
-	_write_mcp_json(mcp_path, "python", [rel.path_join("mcp_bridge.py")])
+	_write_mcp_json(mcp_path, python_path, [rel.path_join("mcp_bridge.py")])
 
 
 func _write_mcp_json(path: String, command: String, args: Array) -> void:
 	var mcp_config := JSON.stringify({
 		"mcpServers": {
 			"knowledge-base": {
+				"type": "stdio",
 				"command": command,
 				"args": args
 			}
